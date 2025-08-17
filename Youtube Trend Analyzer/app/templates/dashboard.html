@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trending Dashboard - {{ region }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF0000'%3E%3Cpath d='M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z'/%3E%3C/svg%3E">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <svg class="youtube-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <h1>Trending Dashboard</h1>
+        </div>
+        <p class="subtitle">Currently trending in: <strong>{{ region }}</strong>{% if language %} ({{ language.upper() }}){% endif %}</p>
+    </header>
+
+    <nav class="dashboard-nav">
+        <a href="{{ url_for('home') }}" class="nav-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Home
+        </a>
+        <button onclick="refreshData()" class="nav-button refresh-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+            </svg>
+            Refresh Data
+        </button>
+    </nav>
+
+    <main class="dashboard-content">
+        {% if titles and views %}
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-number">{{ titles|length }}</div>
+                    <div class="stat-label">Trending Videos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ "{:,}".format(views|sum) }}</div>
+                    <div class="stat-label">Total Views</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ "{:,}".format((views|sum / titles|length)|int) }}</div>
+                    <div class="stat-label">Avg Views</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ "{:,}".format(views|max) }}</div>
+                    <div class="stat-label">Top Views</div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <h2>View Count Analysis</h2>
+                <div class="chart-container">
+                    <canvas id="viewsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="video-list">
+                <h2>Trending Videos Details</h2>
+                <div class="video-grid">
+                    {% for video in video_data %}
+                        <div class="video-card-enhanced">
+                            <div class="video-rank">#{%raw%}{{ loop.index }}{%endraw%}</div>
+                            <div class="video-thumbnail">
+                                {% if video.video_id %}
+                                    <div class="video-embed" data-video-id="{{ video.video_id }}">
+                                        <img src="https://img.youtube.com/vi/{{ video.video_id }}/mqdefault.jpg" 
+                                             alt="Video thumbnail" 
+                                             onclick="embedVideo('{{ video.video_id }}', this.parentElement)"
+                                             style="cursor: pointer; width: 100%; border-radius: 8px;">
+                                        <div class="play-overlay">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="5,3 19,12 5,21"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="video-info-enhanced">
+                                <h3 class="video-title">{{ video.title }}</h3>
+                                <div class="video-channel">{{ video.channel }}</div>
+                                <div class="video-stats">
+                                    <span class="view-count">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                        {{ "{:,}".format(video.views) }} views
+                                    </span>
+                                    <span class="like-count">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+                                        </svg>
+                                        {{ "{:,}".format(video.likes) }} likes
+                                    </span>
+                                    <span class="comment-count">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                        {{ "{:,}".format(video.comments) }} comments
+                                    </span>
+                                </div>
+                                <div class="video-description">{{ video.description }}</div>
+                                <div class="video-actions">
+                                    <a href="https://www.youtube.com/watch?v={{ video.video_id }}" target="_blank" class="watch-button">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="5,3 19,12 5,21"/>
+                                        </svg>
+                                        Watch on YouTube
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <h2>No Data Available</h2>
+                <p>No trending videos found for the selected region. This could be due to:</p>
+                <ul>
+                    <li>API quota limitations</li>
+                    <li>Regional restrictions</li>
+                    <li>Temporary service issues</li>
+                </ul>
+                <a href="{{ url_for('home') }}" class="nav-button">Try Another Region</a>
+            </div>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 YouTube Trend Analyzer. Data updated: <span id="lastUpdated"></span></p>
+    </footer>
+
+    <script>
+        // Set last updated time
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+
+        {% if titles and views %}
+        // Chart configuration
+        const ctx = document.getElementById('viewsChart').getContext('2d');
+        
+        const chartData = {
+            labels: {{ titles | tojson | safe }},
+            datasets: [{
+                label: 'View Count',
+                data: {{ views | tojson | safe }},
+                backgroundColor: 'rgba(255, 0, 0, 0.7)',
+                borderColor: 'rgba(255, 0, 0, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        };
+
+        const chartConfig = {
+            type: 'bar',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#333',
+                            font: {
+                                family: 'Roboto',
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        borderColor: '#FF0000',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return 'Views: ' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                family: 'Roboto',
+                                size: 12
+                            },
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    },
+                    y: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            color: '#666',
+                            font: {
+                                family: 'Roboto',
+                                size: 12
+                            },
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        const viewsChart = new Chart(ctx, chartConfig);
+        {% endif %}
+
+        // Refresh data function
+        function refreshData() {
+            const refreshButton = document.querySelector('.refresh-button');
+            const originalContent = refreshButton.innerHTML;
+            
+            refreshButton.innerHTML = '<svg class="spinner" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>Refreshing...';
+            refreshButton.disabled = true;
+            
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/fetch';
+            form.style.display = 'none';
+            
+            const regionInput = document.createElement('input');
+            regionInput.type = 'hidden';
+            regionInput.name = 'region';
+            regionInput.value = '{{ region }}';
+            
+            {% if language %}
+            const languageInput = document.createElement('input');
+            languageInput.type = 'hidden';
+            languageInput.name = 'language';
+            languageInput.value = '{{ language }}';
+            form.appendChild(languageInput);
+            {% endif %}
+            
+            form.appendChild(regionInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        // Video embedding function
+        function embedVideo(videoId, container) {
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            iframe.width = '100%';
+            iframe.height = '200';
+            iframe.frameBorder = '0';
+            iframe.allow = 'autoplay; encrypted-media';
+            iframe.allowFullscreen = true;
+            iframe.style.borderRadius = '8px';
+            
+            container.innerHTML = '';
+            container.appendChild(iframe);
+        }
+
+        // Real-time data refresh every 5 minutes
+        setInterval(refreshData, 300000);
+        
+        // Add real-time indicator
+        const updateIndicator = document.createElement('div');
+        updateIndicator.className = 'real-time-indicator';
+        updateIndicator.innerHTML = '🔴 Live Data';
+        document.querySelector('.subtitle').appendChild(updateIndicator);
+    </script>
+</body>
+</html>

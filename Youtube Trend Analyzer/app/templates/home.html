@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Trend Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF0000'%3E%3Cpath d='M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z'/%3E%3C/svg%3E">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <svg class="youtube-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <h1>YouTube Trend Analyzer</h1>
+        </div>
+        <p class="subtitle">Discover what's trending across different regions</p>
+    </header>
+
+    <main class="main-content">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            <span class="flash-text">{{ message }}</span>
+                            <button class="flash-close" onclick="this.parentElement.style.display='none'">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <h2>Select a Region to Analyze</h2>
+            <p class="form-description">Choose a country to see what videos are currently trending in that region.</p>
+            
+            <form action="/fetch" method="post" class="region-form">
+                <div class="form-group">
+                    <label for="region">Choose a region:</label>
+                    <select id="region" name="region" required onchange="updateLanguages()">
+                        <option value="">-- Select a Region --</option>
+                        <!-- North America -->
+                        <option value="US">🇺🇸 United States</option>
+                        <option value="CA">🇨🇦 Canada</option>
+                        <option value="MX">🇲🇽 Mexico</option>
+                        
+                        <!-- South America -->
+                        <option value="BR">🇧🇷 Brazil</option>
+                        <option value="AR">🇦🇷 Argentina</option>
+                        <option value="CL">🇨🇱 Chile</option>
+                        <option value="CO">🇨🇴 Colombia</option>
+                        <option value="PE">🇵🇪 Peru</option>
+                        
+                        <!-- Europe -->
+                        <option value="GB">🇬🇧 United Kingdom</option>
+                        <option value="DE">🇩🇪 Germany</option>
+                        <option value="FR">🇫🇷 France</option>
+                        <option value="IT">🇮🇹 Italy</option>
+                        <option value="ES">🇪🇸 Spain</option>
+                        <option value="NL">🇳🇱 Netherlands</option>
+                        <option value="BE">🇧🇪 Belgium</option>
+                        <option value="CH">🇨🇭 Switzerland</option>
+                        <option value="AT">🇦🇹 Austria</option>
+                        <option value="SE">🇸🇪 Sweden</option>
+                        <option value="NO">🇳🇴 Norway</option>
+                        <option value="DK">🇩🇰 Denmark</option>
+                        <option value="FI">🇫🇮 Finland</option>
+                        <option value="PL">🇵🇱 Poland</option>
+                        <option value="CZ">🇨🇿 Czech Republic</option>
+                        <option value="HU">🇭🇺 Hungary</option>
+                        <option value="PT">🇵🇹 Portugal</option>
+                        <option value="GR">🇬🇷 Greece</option>
+                        <option value="IE">🇮🇪 Ireland</option>
+                        <option value="RU">🇷🇺 Russia</option>
+                        <option value="UA">🇺🇦 Ukraine</option>
+                        <option value="TR">🇹🇷 Turkey</option>
+                        
+                        <!-- Asia -->
+                        <option value="IN">🇮🇳 India</option>
+                        <option value="JP">🇯🇵 Japan</option>
+                        <option value="KR">🇰🇷 South Korea</option>
+                        <option value="CN">🇨🇳 China</option>
+                        <option value="TH">🇹🇭 Thailand</option>
+                        <option value="VN">🇻🇳 Vietnam</option>
+                        <option value="PH">🇵🇭 Philippines</option>
+                        <option value="ID">🇮🇩 Indonesia</option>
+                        <option value="MY">🇲🇾 Malaysia</option>
+                        <option value="SG">🇸🇬 Singapore</option>
+                        <option value="TW">🇹🇼 Taiwan</option>
+                        <option value="HK">🇭🇰 Hong Kong</option>
+                        <option value="PK">🇵🇰 Pakistan</option>
+                        <option value="BD">🇧🇩 Bangladesh</option>
+                        <option value="LK">🇱🇰 Sri Lanka</option>
+                        <option value="AE">🇦🇪 UAE</option>
+                        <option value="SA">🇸🇦 Saudi Arabia</option>
+                        <option value="IL">🇮🇱 Israel</option>
+                        
+                        <!-- Africa -->
+                        <option value="ZA">🇿🇦 South Africa</option>
+                        <option value="NG">🇳🇬 Nigeria</option>
+                        <option value="KE">🇰🇪 Kenya</option>
+                        <option value="EG">🇪🇬 Egypt</option>
+                        <option value="MA">🇲🇦 Morocco</option>
+                        <option value="TN">🇹🇳 Tunisia</option>
+                        <option value="GH">🇬🇭 Ghana</option>
+                        
+                        <!-- Oceania -->
+                        <option value="AU">🇦🇺 Australia</option>
+                        <option value="NZ">🇳🇿 New Zealand</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="language-group" style="display: none;">
+                    <label for="language">Choose language (optional):</label>
+                    <select id="language" name="language">
+                        <option value="">-- Default Language --</option>
+                    </select>
+                    <small class="form-hint">Leave blank to use the main language of the selected region</small>
+                </div>
+                
+                <button type="submit" class="fetch-button">
+                    <svg class="button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12c0 1.2-4.03 6-9 6s-9-4.8-9-6c0-1.2 4.03-6 9-6s9 4.8 9 6z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Analyze Trends
+                </button>
+            </form>
+        </div>
+
+        <div class="features">
+            <h2>Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3h18v18H3zM9 9h6v6H9z"/>
+                    </svg>
+                    <h3>Real-time Data</h3>
+                    <p>Get the latest trending videos directly from YouTube's API</p>
+                </div>
+                <div class="feature-card">
+                    <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 20V10M12 20V4M6 20v-6"/>
+                    </svg>
+                    <h3>Interactive Charts</h3>
+                    <p>Visualize trending data with beautiful, interactive charts</p>
+                </div>
+                <div class="feature-card">
+                    <svg class="feature-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M2 12h20"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                    <h3>Global Regions</h3>
+                    <p>Explore trends from over 15 different countries worldwide</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 YouTube Trend Analyzer. Powered by YouTube Data API v3.</p>
+    </footer>
+
+    <script>
+        // Language mapping for each region
+        const regionLanguages = {
+            // North America
+            'US': [
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'es', name: '🇪🇸 Spanish' },
+                { code: 'zh', name: '🇨🇳 Chinese' }
+            ],
+            'CA': [
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'fr', name: '🇫🇷 French' }
+            ],
+            'MX': [
+                { code: 'es', name: '🇲🇽 Spanish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            
+            // South America
+            'BR': [
+                { code: 'pt', name: '🇧🇷 Portuguese' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'AR': [
+                { code: 'es', name: '🇦🇷 Spanish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'CL': [
+                { code: 'es', name: '🇨🇱 Spanish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'CO': [
+                { code: 'es', name: '🇨🇴 Spanish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'PE': [
+                { code: 'es', name: '🇵🇪 Spanish' },
+                { code: 'qu', name: 'Quechua' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            
+            // Europe
+            'GB': [
+                { code: 'en', name: '🇬🇧 English' },
+                { code: 'cy', name: '🏴󠁧󠁢󠁷󠁬󠁳󠁿 Welsh' }
+            ],
+            'DE': [
+                { code: 'de', name: '🇩🇪 German' },
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'tr', name: '🇹🇷 Turkish' }
+            ],
+            'FR': [
+                { code: 'fr', name: '🇫🇷 French' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'IT': [
+                { code: 'it', name: '🇮🇹 Italian' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'ES': [
+                { code: 'es', name: '🇪🇸 Spanish' },
+                { code: 'ca', name: 'Catalan' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'NL': [
+                { code: 'nl', name: '🇳🇱 Dutch' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'BE': [
+                { code: 'nl', name: '🇳🇱 Dutch' },
+                { code: 'fr', name: '🇫🇷 French' },
+                { code: 'de', name: '🇩🇪 German' }
+            ],
+            'CH': [
+                { code: 'de', name: '🇩🇪 German' },
+                { code: 'fr', name: '🇫🇷 French' },
+                { code: 'it', name: '🇮🇹 Italian' }
+            ],
+            'AT': [
+                { code: 'de', name: '🇦🇹 German' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'SE': [
+                { code: 'sv', name: '🇸🇪 Swedish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'NO': [
+                { code: 'no', name: '🇳🇴 Norwegian' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'DK': [
+                { code: 'da', name: '🇩🇰 Danish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'FI': [
+                { code: 'fi', name: '🇫🇮 Finnish' },
+                { code: 'sv', name: '🇸🇪 Swedish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'PL': [
+                { code: 'pl', name: '🇵🇱 Polish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'CZ': [
+                { code: 'cs', name: '🇨🇿 Czech' },
+                { code: 'sk', name: '🇸🇰 Slovak' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'HU': [
+                { code: 'hu', name: '🇭🇺 Hungarian' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'PT': [
+                { code: 'pt', name: '🇵🇹 Portuguese' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'GR': [
+                { code: 'el', name: '🇬🇷 Greek' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'IE': [
+                { code: 'en', name: '🇮🇪 English' },
+                { code: 'ga', name: '🇮🇪 Irish' }
+            ],
+            'RU': [
+                { code: 'ru', name: '🇷🇺 Russian' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'UA': [
+                { code: 'uk', name: '🇺🇦 Ukrainian' },
+                { code: 'ru', name: '🇷🇺 Russian' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'TR': [
+                { code: 'tr', name: '🇹🇷 Turkish' },
+                { code: 'ku', name: 'Kurdish' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            
+            // Asia
+            'IN': [
+                { code: 'hi', name: '🇮🇳 Hindi' },
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'ta', name: '🇮🇳 Tamil' },
+                { code: 'te', name: '🇮🇳 Telugu' },
+                { code: 'bn', name: '🇧🇩 Bengali' },
+                { code: 'mr', name: '🇮🇳 Marathi' },
+                { code: 'gu', name: '🇮🇳 Gujarati' }
+            ],
+            'JP': [
+                { code: 'ja', name: '🇯🇵 Japanese' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'KR': [
+                { code: 'ko', name: '🇰🇷 Korean' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'CN': [
+                { code: 'zh', name: '🇨🇳 Chinese' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'TH': [
+                { code: 'th', name: '🇹🇭 Thai' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'VN': [
+                { code: 'vi', name: '🇻🇳 Vietnamese' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'PH': [
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'tl', name: '🇵🇭 Filipino' }
+            ],
+            'ID': [
+                { code: 'id', name: '🇮🇩 Indonesian' },
+                { code: 'jv', name: 'Javanese' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'MY': [
+                { code: 'ms', name: '🇲🇾 Malay' },
+                { code: 'zh', name: '🇨🇳 Chinese' },
+                { code: 'ta', name: '🇮🇳 Tamil' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'SG': [
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'zh', name: '🇨🇳 Chinese' },
+                { code: 'ms', name: '🇲🇾 Malay' },
+                { code: 'ta', name: '🇮🇳 Tamil' }
+            ],
+            'TW': [
+                { code: 'zh', name: '🇹🇼 Chinese' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'HK': [
+                { code: 'zh', name: '🇭🇰 Chinese' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'PK': [
+                { code: 'ur', name: '🇵🇰 Urdu' },
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'pa', name: 'Punjabi' }
+            ],
+            'BD': [
+                { code: 'bn', name: '🇧🇩 Bengali' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'LK': [
+                { code: 'si', name: '🇱🇰 Sinhala' },
+                { code: 'ta', name: '🇮🇳 Tamil' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'AE': [
+                { code: 'ar', name: '🇦🇪 Arabic' },
+                { code: 'en', name: '🇺🇸 English' },
+                { code: 'hi', name: '🇮🇳 Hindi' }
+            ],
+            'SA': [
+                { code: 'ar', name: '🇸🇦 Arabic' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'IL': [
+                { code: 'he', name: '🇮🇱 Hebrew' },
+                { code: 'ar', name: 'Arabic' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            
+            // Africa
+            'ZA': [
+                { code: 'en', name: '🇿🇦 English' },
+                { code: 'af', name: 'Afrikaans' },
+                { code: 'zu', name: 'Zulu' },
+                { code: 'xh', name: 'Xhosa' }
+            ],
+            'NG': [
+                { code: 'en', name: '🇳🇬 English' },
+                { code: 'ha', name: 'Hausa' },
+                { code: 'yo', name: 'Yoruba' },
+                { code: 'ig', name: 'Igbo' }
+            ],
+            'KE': [
+                { code: 'en', name: '🇰🇪 English' },
+                { code: 'sw', name: 'Swahili' }
+            ],
+            'EG': [
+                { code: 'ar', name: '🇪🇬 Arabic' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'MA': [
+                { code: 'ar', name: '🇲🇦 Arabic' },
+                { code: 'fr', name: '🇫🇷 French' },
+                { code: 'en', name: '🇺🇸 English' }
+            ],
+            'TN': [
+                { code: 'ar', name: '🇹🇳 Arabic' },
+                { code: 'fr', name: '🇫🇷 French' }
+            ],
+            'GH': [
+                { code: 'en', name: '🇬🇭 English' },
+                { code: 'ak', name: 'Akan' }
+            ],
+            
+            // Oceania
+            'AU': [
+                { code: 'en', name: '🇦🇺 English' },
+                { code: 'zh', name: '🇨🇳 Chinese' }
+            ],
+            'NZ': [
+                { code: 'en', name: '🇳🇿 English' },
+                { code: 'mi', name: 'Māori' }
+            ]
+        };
+
+        function updateLanguages() {
+            const regionSelect = document.getElementById('region');
+            const languageGroup = document.getElementById('language-group');
+            const languageSelect = document.getElementById('language');
+            const selectedRegion = regionSelect.value;
+
+            if (selectedRegion && regionLanguages[selectedRegion]) {
+                // Show language selection
+                languageGroup.style.display = 'block';
+                
+                // Clear existing options
+                languageSelect.innerHTML = '<option value="">-- Default Language --</option>';
+                
+                // Add language options for selected region
+                regionLanguages[selectedRegion].forEach(lang => {
+                    const option = document.createElement('option');
+                    option.value = lang.code;
+                    option.textContent = lang.name;
+                    languageSelect.appendChild(option);
+                });
+            } else {
+                // Hide language selection
+                languageGroup.style.display = 'none';
+            }
+        }
+
+        // Add loading state to form submission
+        document.querySelector('.region-form').addEventListener('submit', function(e) {
+            const button = this.querySelector('.fetch-button');
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<svg class="button-icon spinner" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>Loading...';
+            button.disabled = true;
+            
+            // Re-enable button after 10 seconds in case of issues
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 10000);
+        });
+    </script>
+</body>
+</html>
